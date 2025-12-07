@@ -21,26 +21,27 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     e.preventDefault()
     const target = document.querySelector(this.getAttribute("href"))
     if (target) {
-      target.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
+      const navbarHeight = document.querySelector('.navbar').offsetHeight
+      const targetPosition = target.offsetTop - navbarHeight
+      
+      window.scrollTo({
+        top: targetPosition,
+        behavior: "smooth"
       })
     }
   })
 })
 
-// Active navigation link highlighting
-window.addEventListener("scroll", () => {
-  let current = ""
-  const sections = document.querySelectorAll("section")
-
-  sections.forEach((section) => {
-    const sectionTop = section.offsetTop
-    const sectionHeight = section.clientHeight
-    if (scrollY >= sectionTop - 200) {
-      current = section.getAttribute("id")
+// Dynamic navbar height adjustment for responsive design
+function getNavbarHeight() {
+  const navbar = document.querySelector('.navbar')
+  return navbar ? navbar.offsetHeight : 70
+}
     }
   })
+})
+
+
 
   navLinks.forEach((link) => {
     link.classList.remove("active")
@@ -145,7 +146,7 @@ function showNotification(message, type = "info") {
 // Scroll animations
 const observerOptions = {
   threshold: 0.1,
-  rootMargin: "0px 0px -50px 0px",
+  rootMargin: "0px 0px -100px 0px",
 }
 
 const observer = new IntersectionObserver((entries) => {
@@ -189,14 +190,14 @@ window.addEventListener("load", () => {
   }
 })
 
-// Parallax effect for hero section
-window.addEventListener("scroll", () => {
-  const scrolled = window.pageYOffset
-  const hero = document.querySelector(".hero")
-  if (hero) {
-    hero.style.transform = `translateY(${scrolled * 0.5}px)`
-  }
-})
+// Parallax effect for hero section (disabled to prevent overlapping issues)
+// window.addEventListener("scroll", () => {
+//   const scrolled = window.pageYOffset
+//   const hero = document.querySelector(".hero")
+//   if (hero) {
+//     hero.style.transform = `translateY(${scrolled * 0.5}px)`
+//   }
+// })
 
 // Project card hover effects
 document.querySelectorAll(".project-card").forEach((card) => {
@@ -278,10 +279,27 @@ function debounce(func, wait) {
   }
 }
 
-// Apply debounce to scroll events
-window.addEventListener(
-  "scroll",
-  debounce(() => {
-    // Scroll-related functions here
-  }, 10),
-)
+// Debounced scroll handler for active navigation
+const debouncedScrollHandler = debounce(() => {
+  let current = ""
+  const sections = document.querySelectorAll("section")
+  const navbarHeight = getNavbarHeight()
+
+  sections.forEach((section) => {
+    const sectionTop = section.offsetTop - navbarHeight - 100
+    const sectionHeight = section.clientHeight
+    if (scrollY >= sectionTop && scrollY < sectionTop + sectionHeight) {
+      current = section.getAttribute("id")
+    }
+  })
+
+  navLinks.forEach((link) => {
+    link.classList.remove("active")
+    if (link.getAttribute("href").slice(1) === current) {
+      link.classList.add("active")
+    }
+  })
+}, 16) // ~60fps
+
+// Apply debounced scroll handler
+window.addEventListener("scroll", debouncedScrollHandler)
